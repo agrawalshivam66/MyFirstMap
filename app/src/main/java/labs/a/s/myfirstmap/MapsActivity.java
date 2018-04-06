@@ -1,7 +1,12 @@
 package labs.a.s.myfirstmap;
 
 
+import android.app.LoaderManager;
+import android.content.Context;
+import android.content.Loader;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -29,10 +34,13 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,LoaderManager.LoaderCallbacks<List<pollution>> {
 
     private GoogleMap mMap;
     ArrayList markerPoints= new ArrayList();
+    String text,des;
+    String lat,lng;
+    private  String  pollutionurl="http://api.airpollutionapi.com/1.0/aqi?lat=28.6364&lon=77.2928&APPID=vrlrhcapur72htaf5v1ioh8sno";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,24 +50,74 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
+
+    }
+
+    @Override
+    public Loader<List<pollution>> onCreateLoader(int i, Bundle bundle) {
+        // Create a new loader for the given URL
+        return new PollutionLoader(this, pollutionurl);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<pollution>> loader, List<pollution> pollutionList) {
+
+        if (pollutionList != null && !pollutionList.isEmpty()) {
+            pollution p = pollutionList.get(0);
+             text = p.gettext();
+             des = p.getdescription();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<pollution>> loader) {
+        // Loader reset, so we can clear out our existing data.
+
     }
 
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng sydney = new LatLng(-34, 151);
+        LatLng sydney = new LatLng(28.6129, 77.2295);
         //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16));
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-//
-//                if (markerPoints.size() > 1) {
-//                    markerPoints.clear();
-//                    mMap.clear();
-//                }
+
+                Double latt=latLng.latitude;
+                lat=String.valueOf(latt);
+                lat=lat.substring(0,7);
+                Double lngg = latLng.longitude;
+                lng=String.valueOf(lngg);
+                lng = lng.substring(0,7);
+                pollutionurl="http://api.airpollutionapi.com/1.0/aqi?lat="+lat+"&lon="+lng+"&APPID=vrlrhcapur72htaf5v1ioh8sno";
+
+                // Get a reference to the ConnectivityManager to check state of network connectivity
+                ConnectivityManager connMgr = (ConnectivityManager)
+                        getSystemService(Context.CONNECTIVITY_SERVICE);
+
+
+                // Get details on the currently active default data network
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+                // If there is a network connection, fetch data
+                if (networkInfo != null && networkInfo.isConnected())
+
+                {
+                    // Get a reference to the LoaderManager, in order to interact with loaders.
+                    LoaderManager loaderManager = getLoaderManager();
+
+                    // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+                    // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+                    // because this activity implements the LoaderCallbacks interface).
+                    loaderManager.restartLoader(1, null, MapsActivity.this);
+                }
+
 
                 // Adding new item to the ArrayList
                 markerPoints.add(latLng);
@@ -77,7 +135,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 // Add new marker to the Google Map Android API V2
-                mMap.addMarker(options);
+                mMap.addMarker(options.title(text)).showInfoWindow();
 
                 // Checks, whether start and end locations are captured
                 if (markerPoints.size() >= 2) {
