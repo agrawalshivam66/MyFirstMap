@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">myfirstmap</string>
+    <string name="title_activity_edittext">edittext</string>
 </resources>
