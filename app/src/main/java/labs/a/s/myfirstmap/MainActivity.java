@@ -17,6 +17,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     GoogleMap m_map;
     Boolean mapReady=false;
     Button map,hybrid,satelite;
+    static final CameraPosition newyork = CameraPosition.builder()
+            .target(new LatLng(40.7484,-73.9857)).bearing(0).tilt(45).zoom(21).build();
+
+    static final CameraPosition random1 = CameraPosition.builder()
+            .target(new LatLng(47.6204,-122.3491)).bearing(0).tilt(45).zoom(21).build();
+
+    static final CameraPosition random2 = CameraPosition.builder()
+            .target(new LatLng(53.3478,-6.2597)).bearing(0).tilt(45).zoom(21).build();
+
+    static final CameraPosition random3 = CameraPosition.builder()
+            .target(new LatLng(35.6895,139.6917)).bearing(0).tilt(45).zoom(21).build();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View view) {
                 if(mapReady)
                 {
-                    m_map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    flyto(random3);
                 }
             }
         });
@@ -45,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View view) {
                 if(mapReady)
                 {
-                    m_map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                  flyto(random2);
                 }
             }
         });
@@ -56,13 +67,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void onClick(View view) {
             if(mapReady)
             {
-                m_map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+               flyto(random1);
             }
         }
     });
-        //updating fragment
+
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);
+    }
+
+    private void flyto(CameraPosition target) {
+        //to fly animation for 10 seconds to target place
+        m_map.animateCamera(CameraUpdateFactory.newCameraPosition(target),10000,null);
     }
 
     @Override
@@ -72,5 +88,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng place = new LatLng(40.7484,-73.9857);
         CameraPosition target = CameraPosition.builder().target(place).zoom(14).build();
         m_map.moveCamera(CameraUpdateFactory.newCameraPosition(target));
+            m_map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+
     }
 }
