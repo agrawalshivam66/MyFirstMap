@@ -68,6 +68,9 @@ public class PollutionActivity extends AppCompatActivity implements LoaderManage
 
         if (pollutionList != null && !pollutionList.isEmpty()) {
             mAdapter.addAll(pollutionList);
+            pollution p = pollutionList.get(0);
+            String text = p.gettext();
+            String des = p.getdescription();
         }
     }
 
