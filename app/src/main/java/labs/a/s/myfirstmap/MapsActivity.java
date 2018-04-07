@@ -51,8 +51,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
-
     }
 
     @Override
@@ -81,9 +79,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng sydney = new LatLng(28.6129, 77.2295);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16));
+        LatLng delhi = new LatLng(28.6129, 77.2295);
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        //mMap.addMarker(new MarkerOptions().position(delhi).title("Marker in delhi"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(delhi, 16));
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -100,7 +99,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Get a reference to the ConnectivityManager to check state of network connectivity
                 ConnectivityManager connMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
-
 
                 // Get details on the currently active default data network
                 NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
