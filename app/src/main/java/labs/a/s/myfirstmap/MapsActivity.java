@@ -5,13 +5,19 @@ import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Loader;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,25 +39,60 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,LoaderManager.LoaderCallbacks<List<pollution>> {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LoaderManager.LoaderCallbacks<List<pollution>> {
 
     private GoogleMap mMap;
-    ArrayList markerPoints= new ArrayList();
-    String text,des;
-    String lat,lng;
-    private  String  pollutionurl="http://api.airpollutionapi.com/1.0/aqi?lat=28.6364&lon=77.2928&APPID=vrlrhcapur72htaf5v1ioh8sno";
+    ArrayList markerPoints = new ArrayList();
+    String text, des;
+    String lat, lng;
+    String dist;
+    LatLng start;
+    float[] distance = new float[1];
+    private LocationManager locationManager;
+    private LocationListener listener;
+    LatLng home = new LatLng(28.6129, 77.2295);
+    Button b;
+    private String pollutionurl = "http://api.airpollutionapi.com/1.0/aqi?lat=28.6364&lon=77.2928&APPID=vrlrhcapur72htaf5v1ioh8sno";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        b = (Button) findViewById(R.id.button);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        MyLocation myLocation = new MyLocation(this);
+
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+
+
+             myLocation.getLocation(this, locationResult));
+
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                home = new LatLng(location.getLongitude(), location.getLatitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(home, 16));
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+            }
+        });
+
     }
+    }
+
+    public LocationResult locationResult = new LocationResult(){
+        @Override
+        public void gotLocation(final Location location){
+            //Got the location!
+        });
+    }
+
 
     @Override
     public Loader<List<pollution>> onCreateLoader(int i, Bundle bundle) {
@@ -64,8 +105,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (pollutionList != null && !pollutionList.isEmpty()) {
             pollution p = pollutionList.get(0);
-             text = p.gettext();
-             des = p.getdescription();
+            text = p.gettext();
+            des = p.getdescription();
         }
     }
 
@@ -75,30 +116,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng delhi = new LatLng(28.6129, 77.2295);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(home, 16));
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        //mMap.addMarker(new MarkerOptions().position(delhi).title("Marker in delhi"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(delhi, 16));
-
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
 
-                Double latt=latLng.latitude;
-                lat=String.valueOf(latt);
-                lat=lat.substring(0,7);
+                Double latt = latLng.latitude;
+                lat = String.valueOf(latt);
+                lat = lat.substring(0, 7);
                 Double lngg = latLng.longitude;
-                lng=String.valueOf(lngg);
-                lng = lng.substring(0,7);
-                pollutionurl="http://api.airpollutionapi.com/1.0/aqi?lat="+lat+"&lon="+lng+"&APPID=vrlrhcapur72htaf5v1ioh8sno";
+                lng = String.valueOf(lngg);
+                lng = lng.substring(0, 7);
+                pollutionurl = "http://api.airpollutionapi.com/1.0/aqi?lat=" + lat + "&lon=" + lng + "&APPID=vrlrhcapur72htaf5v1ioh8sno";
 
                 // Get a reference to the ConnectivityManager to check state of network connectivity
                 ConnectivityManager connMgr = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
+
 
                 // Get details on the currently active default data network
                 NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -126,20 +164,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Setting the position of the marker
                 options.position(latLng);
 
+
                 if (markerPoints.size() == 1) {
+                    start = latLng;
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 } else if (markerPoints.size() >= 2) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
                 }
 
+                Location.distanceBetween(start.latitude, start.longitude, latLng.latitude, latLng.longitude, distance);
+
+                dist = String.format("%.2f", (distance[0] / 1000));
+
                 // Add new marker to the Google Map Android API V2
-                mMap.addMarker(options.title(text)).showInfoWindow();
+                mMap.addMarker(options.title(text + " " + dist + " Km")).showInfoWindow();
+
 
                 // Checks, whether start and end locations are captured
                 if (markerPoints.size() >= 2) {
                     for (int i = 1; i < markerPoints.size(); i++) {
                         LatLng origin = (LatLng) markerPoints.get(0);
                         LatLng dest = (LatLng) markerPoints.get(i);
+
 
                         // Getting URL to the Google Directions API
                         String url = getDirectionsUrl(origin, dest);
@@ -155,6 +201,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
     }
+
 
     private class DownloadTask extends AsyncTask<String, Void, String> {
 
@@ -176,8 +223,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             super.onPostExecute(result);
 
             ParserTask parserTask = new ParserTask();
-
-
             parserTask.execute(result);
 
         }
@@ -201,6 +246,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 DirectionsJSONParser parser = new DirectionsJSONParser();
 
                 routes = parser.parse(jObject);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -302,4 +348,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return data;
     }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
